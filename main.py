@@ -39,6 +39,19 @@ def momentum(chunk: pl.DataFrame):
     )
     return feature
 
+# @strategy
+def monthly_momentum_strategy():
+    """ 
+    This is the script for the classic momentum trading strategy.
+    It should be able to be passed to both a backtester and a live/paper trader.
+    """
+    # (1) pull data
+    # (2) create new chunks
+    # (3) apply feature transformations
+    # (4) generate latest portfolio
+    # (5) send portfolio to trader
+    pass
+
 if __name__ == "__main__":
     data = ToyDataset().load()
     chunked_data = ChunkedData(data, 11, ["date", "ticker", "ret"])
