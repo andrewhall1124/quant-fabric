@@ -22,7 +22,7 @@ class ToyDataset:
     def download(self):
         tickers = ["AAPL", "F", "KO", "VZ"]
 
-        data = yf.download(tickers, "2024-01-01", "2024-12-31")
+        data = yf.download(tickers, "2023-01-01", "2024-12-31")
 
         data = data.stack(future_stack=True).reset_index()
 
@@ -35,18 +35,28 @@ class ToyDataset:
 
         df = df.rename({col: col.lower() for col in df.columns})
 
-        df = df.sort(by=['ticker', 'date'])
+        df = df.sort(by=["ticker", "date"])
 
-        df = df.with_columns([
-            pl.col('close').pct_change().over('ticker').alias('ret')
-        ])
+        df = (
+            df.with_columns(
+                pl.col('date').dt.strftime("%Y-%m").alias('mdt')
+            )
+            .group_by(['mdt', 'ticker'])
+            .agg(
+                date=pl.col('date').last(),
+                close=pl.col('close').last()
+            )
+            .sort(['ticker', 'date'])
+        ).select(['date', 'ticker', 'close'])
+
+        df = df.with_columns([pl.col("close").pct_change().over('ticker').alias("ret")]).drop_nulls()
 
         df.write_parquet(self.clean_file_path)
 
     def load(self):
         return pl.read_parquet(self.clean_file_path)
+    
 
-
-df = ToyDataset().load()
-
-print(df)
+if __name__ == "__main__":
+    data = ToyDataset().load()
+    print(data)
