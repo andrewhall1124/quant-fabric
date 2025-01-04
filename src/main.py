@@ -1,5 +1,5 @@
 import polars as pl
-from data import ToyDataset
+from src.data import ToyDataset
 
 class ChunkedData:
     def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
@@ -53,7 +53,7 @@ def monthly_momentum_strategy():
     pass
 
 if __name__ == "__main__":
-    data = ToyDataset().load()
+    data = ToyDataset(type='monthly').load()
     chunked_data = ChunkedData(data, 11, ["date", "ticker", "ret"])
 
     print(len(chunked_data.chunks), "chunks")

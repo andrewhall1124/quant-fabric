@@ -5,7 +5,8 @@ import os
 
 class ToyDataset:
 
-    def __init__(self):
+    def __init__(self, type: str = 'daily'):
+        self.type = type
         self.data_dir = "data/"
         self.raw_file_path = self.data_dir + "raw_toy_dataset.parquet"
         self.clean_file_path = self.data_dir + "clean_toy_dataset.parquet"
@@ -37,17 +38,18 @@ class ToyDataset:
 
         df = df.sort(by=["ticker", "date"])
 
-        df = (
-            df.with_columns(
-                pl.col('date').dt.strftime("%Y-%m").alias('mdt')
-            )
-            .group_by(['mdt', 'ticker'])
-            .agg(
-                date=pl.col('date').last(),
-                close=pl.col('close').last()
-            )
-            .sort(['ticker', 'date'])
-        ).select(['date', 'ticker', 'close'])
+        if self.type == 'monthly':
+            df = (
+                df.with_columns(
+                    pl.col('date').dt.strftime("%Y-%m").alias('mdt')
+                )
+                .group_by(['mdt', 'ticker'])
+                .agg(
+                    date=pl.col('date').last(),
+                    close=pl.col('close').last()
+                )
+                .sort(['ticker', 'date'])
+            ).select(['date', 'ticker', 'close'])
 
         df = df.with_columns([pl.col("close").pct_change().over('ticker').alias("ret")]).drop_nulls()
 
