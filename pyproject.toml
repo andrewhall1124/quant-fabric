@@ -1,12 +1,15 @@
 [project]
-name = "system-test"
+name = "quant-fabric"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "alpaca-py>=0.35.0",
     "black>=24.10.0",
     "numpy>=2.2.1",
     "polars>=1.18.0",
+    "pyarrow>=18.1.0",
+    "python-dotenv>=1.0.1",
     "yfinance>=0.2.51",
 ]
