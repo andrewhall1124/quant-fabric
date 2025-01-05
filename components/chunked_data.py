@@ -1,6 +1,7 @@
 import polars as pl
 from src.data import ToyDataset
 
+
 class ChunkedData:
     def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
         unique_dates = data.select("date").unique().sort(by="date")["date"]

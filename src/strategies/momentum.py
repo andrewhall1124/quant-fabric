@@ -1,6 +1,5 @@
-
-def momentum_strategy(type: str = 'daily'):
-    """ 
+def momentum_strategy(type: str = "daily"):
+    """
     This is the script for the classic momentum trading strategy.
     It should be able to be passed to both a backtester and a live/paper trader.
     """
