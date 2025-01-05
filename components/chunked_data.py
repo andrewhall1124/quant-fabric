@@ -1,5 +1,5 @@
 import polars as pl
-from src.data import ToyDataset
+from typing import Self
 
 
 class ChunkedData:
@@ -16,10 +16,14 @@ class ChunkedData:
 
             chunks.append(chunk)
 
-        self.chunks = chunks
+        self._chunks = chunks
 
-    def apply_feature(self, feature):
+    def apply_feature(self, feature) -> Self:
         for i, chunk in enumerate(self.chunks):
             self.chunks[i] = feature(chunk)
 
-        return self.chunks
+        return self
+
+    @property
+    def chunks(self) -> list[pl.DataFrame]:
+        return self._chunks
