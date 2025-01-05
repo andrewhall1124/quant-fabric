@@ -7,7 +7,7 @@ class ToyDataset:
 
     def __init__(self, type: str = 'daily'):
         self.type = type
-        self.data_dir = "data/"
+        self.data_dir = ".data/"
         self.raw_file_path = self.data_dir + "raw_toy_dataset.parquet"
         self.clean_file_path = self.data_dir + "clean_toy_dataset.parquet"
 
