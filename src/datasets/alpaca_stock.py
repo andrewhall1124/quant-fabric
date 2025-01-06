@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import polars as pl
-from database import Database
+from qdatabase import Database
 
 class AlpacaStock():
 

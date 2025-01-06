@@ -1,6 +1,5 @@
 import polars as pl
 
-
 # @feature
 def momentum_feature(chunk: pl.DataFrame, type: str = "daily"):
     # Set window size

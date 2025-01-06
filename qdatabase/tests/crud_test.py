@@ -1,4 +1,4 @@
-from database import Database
+from qdatabase import Database
 import polars as pl
 from polars.testing import assert_frame_equal
 import os

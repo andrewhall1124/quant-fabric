@@ -1,6 +1,6 @@
-from datasets import ToyDataset
-from components import ChunkedData
-from features import momentum_feature
+from qcomponents import ChunkedData
+from src.features import momentum_feature
+from src.datasets import ToyDataset
 from functools import partial
 
 
