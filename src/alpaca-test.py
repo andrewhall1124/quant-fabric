@@ -1,6 +1,6 @@
 from alpaca.data import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
-from alpaca.data.timeframe import TimeFrame
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.data.enums import Adjustment, DataFeed
 from alpaca.data.models.bars import BarSet
 from datetime import datetime
@@ -17,7 +17,7 @@ stock_client = StockHistoricalDataClient(api_key, secret_key)
 
 stock_bar_request = StockBarsRequest(
     symbol_or_symbols=["AAPL"],
-    timeframe=TimeFrame.Day,
+    timeframe=TimeFrame(1, TimeFrameUnit.Day),
     start=datetime(2025, 1, 1),
     end=datetime(2025, 1, 4),
     adjustment=Adjustment.SPLIT,
