@@ -30,9 +30,11 @@ class AlpacaStock():
         self._trading_client = TradingClient(api_key, secret_key)
         self.db = Database()
 
-        self._download()
+        # self._table_name
+        self._download_and_stage()
+        self._merge()
 
-    def _download(self):
+    def _download_and_stage(self):
         # Get tradable symbols
         symbols = self._get_symbols()
 
@@ -51,6 +53,8 @@ class AlpacaStock():
         df = bar_set.df.reset_index()
         df = pl.from_pandas(df)
 
+    def _merge(self):
+        pass
 
     def _get_symbols(self):
         # Alpaca get assets request
@@ -97,3 +101,8 @@ class AlpacaStock():
 if __name__ == '__main__':
     start = datetime(2025,1,1)
     dataset = AlpacaStock(start_date=start)
+
+# TODO: Set up dataset to download, stage, and merge the data for a specified time frame
+# TODO: Adapt the dataset to check which dates are already downloaded before running (make an option 'redownload')
+# TODO: Portfolio generator
+# TODO: Backtester module
