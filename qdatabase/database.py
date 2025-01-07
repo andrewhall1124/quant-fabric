@@ -19,7 +19,6 @@ class Database:
 
         # Overwrite check
         if self.exists(table_name) and not overwrite:
-            print("Unable to create table: already exists")
             return
 
         # Write non-empty or schema-defined DataFrame   

@@ -12,6 +12,7 @@ import os
 from dotenv import load_dotenv
 import polars as pl
 from qdatabase import Database
+from src.datasets.alpaca_assets import AlpacaAssets
 
 class AlpacaStockMonthly():
 
@@ -33,6 +34,26 @@ class AlpacaStockMonthly():
         self._stock_client = StockHistoricalDataClient(api_key, secret_key)
         self._trading_client = TradingClient(api_key, secret_key)
         self.db = Database()
+
+        # Create the core table if it doesn't already exist
+        self.core_table_name = 'ALPACA_STOCK_MONTHLY'
+        core_table_schema = {
+            "ticker": pl.Utf8,              
+            "date": pl.Date,
+            "open": pl.Float64,             
+            "high": pl.Float64,             
+            "low": pl.Float64,              
+            "close": pl.Float64,            
+            "volume": pl.Float64,           
+            "trade_count": pl.Float64,      
+            "vwap": pl.Float64,          
+        }
+        empty_core_table = pl.DataFrame(schema=core_table_schema)
+        self.db.create(
+            table_name=self.core_table_name, 
+            data=empty_core_table, 
+            overwrite=False
+        )
 
     def download(self):
         self._download_and_stage()
@@ -57,12 +78,15 @@ class AlpacaStockMonthly():
         return data
 
     def _download_and_stage(self):
+        if self.db.exists(f"{self.table_name}_STG"):
+            return
+        
         # Get tradable symbols
-        symbols = self._get_symbols()
+        tickers = self._get_tickers()
 
         # Get stock bars request
         stock_bar_request = StockBarsRequest(
-            symbol_or_symbols=symbols,
+            symbol_or_symbols=tickers,
             timeframe=TimeFrame(1, TimeFrameUnit.Month),
             start=self.start_date,
             end=self.end_date,
@@ -97,45 +121,21 @@ class AlpacaStockMonthly():
         self.db.create(f"{self.table_name}_XF", xf_table)
 
     def _merge(self):
+        xf_table = self.db.read(f"{self.table_name}_XF")
+        core_table = self.db.read(self.core_table_name)
         
-        # Create the core table if it doesn't already exist
-        core_table_name = 'ALPACA_STOCK_MONTHLY'
-        core_table_schema = {
-            "ticker": pl.Utf8,              
-            "date": pl.Date,
-            "open": pl.Float64,             
-            "high": pl.Float64,             
-            "low": pl.Float64,              
-            "close": pl.Float64,            
-            "volume": pl.Float64,           
-            "trade_count": pl.Float64,      
-            "vwap": pl.Float64,          
-        }
-        empty_core_table = pl.DataFrame(schema=core_table_schema)
-        self.db.create(
-            table_name=core_table_name, 
-            data=empty_core_table, 
-            overwrite=True
-        )
-
-        # Prepare tables for merge with source tracking
-        xf_table = self.db.read(f"{self.table_name}_XF").with_columns(pl.lit('xf').alias('source'))
-        core_table = self.db.read(core_table_name).with_columns(pl.lit('core').alias('source'))
-        
-        # Columns to compare on
-        unique_columns = core_table_schema.keys()
-
         # Find unique rows
-        unique_rows = (
-            pl.concat([core_table, xf_table])
-            .unique(subset=unique_columns, keep='first')
-            .filter(pl.col('source') == 'xf')
-            .drop('source')
+        unique_rows = xf_table.join(
+            core_table,
+            on=['date', 'ticker'],
+            how="anti"
         )
+
+        print(unique_rows)
 
         # Insert unique rows into core table
         print(f"Inserting {len(unique_rows)} unique rows")
-        self.db.insert(core_table_name, unique_rows)
+        self.db.insert(self.core_table_name, unique_rows)
 
         # Archive stage table
         self.db.archive(f"{self.table_name}_STG")
@@ -143,48 +143,10 @@ class AlpacaStockMonthly():
         # Delete xf table
         self.db.delete(f"{self.table_name}_XF")
 
-    def _get_symbols(self):
+    def _get_tickers(self):
         print("Getting available assets")
-        # Alpaca get assets request
-        search_params = GetAssetsRequest(
-            status=AssetStatus.ACTIVE,
-            asset_class=AssetClass.US_EQUITY,
-        )
-        assets: list[Asset] = self._trading_client.get_all_assets(search_params)
-
-        # Parse raw assets data
-        parsed_assets = [
-                {
-                    "id": str(asset.id),
-                    "asset_class": asset.asset_class.value,
-                    "exchange": asset.exchange.value,
-                    "symbol": asset.symbol,
-                    "name": asset.name,
-                    "status": asset.status.value,
-                    "tradable": asset.tradable,
-                    "marginable": asset.marginable,
-                    "shortable": asset.shortable,
-                    "easy_to_borrow": asset.easy_to_borrow,
-                    "fractionable": asset.fractionable,
-                    "min_order_size": asset.min_order_size,
-                    "min_trade_increment": asset.min_trade_increment,
-                    "price_increment": asset.price_increment,
-                    "maintenance_margin_requirement": asset.maintenance_margin_requirement,
-                    "attributes": ", ".join(asset.attributes) if asset.attributes else None
-                }
-                for asset in assets
-            ]
-
-        # Filter out untradable stocks
-        df = pl.DataFrame(parsed_assets)
-        df = df.filter(
-            pl.col('status') == 'active',
-            pl.col('tradable') == True,
-            pl.col('fractionable') == True,
-            pl.col('shortable') == True
-        )
-
-        return df['symbol']
+        assets = AlpacaAssets().load()
+        return assets['ticker'].to_list()
 
 if __name__ == '__main__':
     years = range(2020,2025) # Unsure why years 2016-2019 don't have data...
