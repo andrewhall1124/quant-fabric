@@ -13,24 +13,13 @@ def momentum_strategy(type: str = "daily"):
     It should be able to be passed to both a backtester and a live/paper trader.
     """
 
-    # Set window size
-    match type:
-        case "daily":
-            window = 230
-        case "monthly":
-            window = 11
-
     # Pull raw data
-    # raw_data = ToyDataset(type).load()
     raw_data = AlpacaStockMonthly(
         start_date=date(2020,1,1),
         end_date=date(2024,12,31)
     ).load()
 
-    print(raw_data.filter(pl.col('ticker') == 'AAPL'))
-
     # Create chunks
-    # chunked_data = ChunkedData(raw_data, 11, ["date", "ticker", "ret"])
     chunked_data = ChunkedData(raw_data, 11, ["date", "ticker", "ret"])
 
     # Apply feature transformations
@@ -40,8 +29,7 @@ def momentum_strategy(type: str = "daily"):
 
     # Return orders
     print(len(chunked_data.chunks), "chunks")
-    print(chunked_data.chunks)
-
+    print(chunked_data.chunks[-1].drop_nulls())
 
 if __name__ == "__main__":
     strategy = momentum_strategy("monthly")
