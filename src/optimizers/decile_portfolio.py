@@ -25,4 +25,12 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str):
         for i in range(10)
     ]
 
+    # # Weights
+    # portfolios = [
+    #     portfolio.with_columns(
+    #         pl.lit(1 / len(portfolio)).alias('weight')
+    #     )
+    #     for portfolio in portfolios
+    # ]
+
     return portfolios

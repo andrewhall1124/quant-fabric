@@ -6,19 +6,21 @@ class ChunkedData:
     def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
         self.window = window
 
-        unique_dates = data.select("date").unique().sort(by="date")["date"]
+        unique_dates = data.select("date").unique().sort(by="date")["date"].to_list()
         chunks = []
 
-        for i, end_date in enumerate(unique_dates[window:], start=window):
-            start_date = unique_dates[i - window]
+        for i in range(window, len(unique_dates) + 1):
 
+            start_date = unique_dates[i - window]
+            end_date = unique_dates[i - 1]
+            
             chunk = data.filter(
-                (pl.col("date") >= start_date) & (pl.col("date") <= end_date),
+                (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
             ).select(columns)
 
             chunks.append(chunk)
 
-        self._chunks = chunks
+        self._chunks: list[pl.DataFrame] = chunks
 
     def apply_signal_transform(self, signal) -> Self:
         for i, chunk in enumerate(self.chunks):
@@ -34,12 +36,19 @@ class ChunkedData:
             )
         return portfolios
     
-    def clean_chunks(self):
+    def remove_chunks(self):
+        """Remove chunks that do not have the full window of data."""
         self._chunks = [
             chunk
             for chunk in self._chunks
             if (chunk['date'].max().year - chunk['date'].min().year) * 12 
-               + (chunk['date'].max().month - chunk['date'].min().month) == self.window
+               + (chunk['date'].max().month - chunk['date'].min().month) == self.window - 1
+        ]
+
+        self._chunks = [
+            chunk 
+            for chunk in self._chunks 
+            if len(chunk.drop_nulls()) > 10 # This is just for now.
         ]
 
 
