@@ -18,11 +18,19 @@ class ChunkedData:
 
         self._chunks = chunks
 
-    def apply_feature(self, feature) -> Self:
+    def apply_signal_transform(self, signal) -> Self:
         for i, chunk in enumerate(self.chunks):
-            self.chunks[i] = feature(chunk)
+            self.chunks[i] = signal(chunk)
 
         return self
+
+    def apply_portfolio_gen(self, portfolio_generator) -> list[pl.DataFrame]:
+        portfolios = []
+        for chunk in self.chunks:
+            portfolios.append(
+                portfolio_generator(chunk)
+            )
+        return portfolios
 
     @property
     def chunks(self) -> list[pl.DataFrame]:

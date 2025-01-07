@@ -160,5 +160,3 @@ if __name__ == '__main__':
         ).download()
 
 # TODO: Adapt the dataset to check which dates are already downloaded before running (make an option 'redownload')
-# TODO: Portfolio generator
-# TODO: Backtester module
