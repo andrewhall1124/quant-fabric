@@ -39,6 +39,23 @@ class AlpacaStockMonthly():
         self._transform()
         self._merge()
 
+    def load(self) -> pl.DataFrame:
+        core_table_name = 'ALPACA_STOCK_MONTHLY'
+        data = self.db.read(core_table_name)
+
+        data = data.sort(by=['ticker', 'date'])
+
+        data = data.filter(
+            pl.col('date') >= self.start_date,
+            pl.col('date') <= self.end_date
+        )
+
+        data = data.with_columns(
+            [pl.col("close").pct_change().over("ticker").alias("ret")]
+        )
+
+        return data
+
     def _download_and_stage(self):
         # Get tradable symbols
         symbols = self._get_symbols()

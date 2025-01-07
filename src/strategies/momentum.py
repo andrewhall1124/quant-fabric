@@ -1,7 +1,10 @@
 from qcomponents import ChunkedData
 from src.features import momentum_feature
 from src.datasets import ToyDataset
+from src.datasets import AlpacaStockMonthly
 from functools import partial
+from datetime import date
+import polars as pl
 
 
 def momentum_strategy(type: str = "daily"):
@@ -18,9 +21,16 @@ def momentum_strategy(type: str = "daily"):
             window = 11
 
     # Pull raw data
-    raw_data = ToyDataset(type).load()
+    # raw_data = ToyDataset(type).load()
+    raw_data = AlpacaStockMonthly(
+        start_date=date(2020,1,1),
+        end_date=date(2024,12,31)
+    ).load()
+
+    print(raw_data.filter(pl.col('ticker') == 'AAPL'))
 
     # Create chunks
+    # chunked_data = ChunkedData(raw_data, 11, ["date", "ticker", "ret"])
     chunked_data = ChunkedData(raw_data, 11, ["date", "ticker", "ret"])
 
     # Apply feature transformations
@@ -29,8 +39,8 @@ def momentum_strategy(type: str = "daily"):
     # Generate portfolios
 
     # Return orders
-
-    print(chunked_data.chunks[-1].drop_nulls())
+    print(len(chunked_data.chunks), "chunks")
+    print(chunked_data.chunks)
 
 
 if __name__ == "__main__":
