@@ -4,11 +4,13 @@ from typing import Self
 
 class ChunkedData:
     def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
+        self.window = window
+
         unique_dates = data.select("date").unique().sort(by="date")["date"]
         chunks = []
 
-        for i, end_date in list(enumerate(unique_dates))[window - 1 :]:
-            start_date = unique_dates[i - window + 1]
+        for i, end_date in enumerate(unique_dates[window:], start=window):
+            start_date = unique_dates[i - window]
 
             chunk = data.filter(
                 (pl.col("date") >= start_date) & (pl.col("date") <= end_date),
@@ -31,7 +33,17 @@ class ChunkedData:
                 portfolio_generator(chunk)
             )
         return portfolios
+    
+    def clean_chunks(self):
+        self._chunks = [
+            chunk
+            for chunk in self._chunks
+            if (chunk['date'].max().year - chunk['date'].min().year) * 12 
+               + (chunk['date'].max().month - chunk['date'].min().month) == self.window
+        ]
+
 
     @property
     def chunks(self) -> list[pl.DataFrame]:
         return self._chunks
+    

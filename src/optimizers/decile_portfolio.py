@@ -2,7 +2,8 @@ import numpy as np
 import polars as pl
 from qcomponents import ChunkedData
 
-def decile_portfolio(chunk: ChunkedData, signal: str):
+def decile_portfolio(chunk: pl.DataFrame, signal: str):
+    chunk = chunk.drop_nulls()
 
     # Calculate decile percentiles
     percentiles = np.linspace(0.1, 1, 10)

@@ -4,7 +4,7 @@ from src.datasets import ToyDataset
 from src.datasets import AlpacaStockMonthly
 from src.optimizers import decile_portfolio
 from functools import partial
-from datetime import date
+from datetime import date, timedelta
 import polars as pl
 import numpy as np
 
@@ -22,10 +22,11 @@ def momentum_strategy(type: str = "daily"):
     ).load()
 
     # Create chunks
-    chunked_data = ChunkedData(raw_data, 11, ["date", "ticker", "ret"])
+    chunked_data = ChunkedData(raw_data, 12, ["date", "ticker", "ret"])
 
     # Apply signal transformations
     chunked_data.apply_signal_transform(partial(momentum_signal, type=type))
+    chunked_data.clean_chunks()
 
     # Generate portfolios
     portfolios = chunked_data.apply_portfolio_gen(partial(decile_portfolio, signal='mom'))
@@ -35,4 +36,6 @@ def momentum_strategy(type: str = "daily"):
 
 if __name__ == "__main__":
     portfolios = momentum_strategy("monthly")
-    print(portfolios)
+    print(portfolios[1])
+    print("-"*100)
+    print(portfolios[-1])
