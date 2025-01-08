@@ -1,7 +1,21 @@
 from strategies import momentum_strategy
+from backtester import Backtester
+from functools import partial
+from datetime import date
 
-# Generate portfolios for momentum strategy (example)
+print("\n" + "-"*50 + "Last Period Portfolio" + "-" * 50)
+
 portfolios = momentum_strategy(type="monthly")
 
-# Print the 10 decile portfolios for the last period (December 2024 portfolios)
-print(portfolios)
+print(portfolios[-1])
+
+print("\n" + "-"*50 + "Backtest P&L" + "-" * 50)
+
+bt = Backtester(
+    start_date=date(2020,1,1),
+    end_date=date(2024,12,31),
+    strategy=partial(momentum_strategy, type="monthly")
+)
+
+bt.run()
+
