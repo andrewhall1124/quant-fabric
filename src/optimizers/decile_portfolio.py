@@ -1,6 +1,5 @@
 import numpy as np
 import polars as pl
-from qcomponents import ChunkedData
 
 def decile_portfolio(chunk: pl.DataFrame, signal: str):
     chunk = chunk.drop_nulls()
@@ -25,6 +24,8 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str):
         for i in range(10)
     ]
 
+    return portfolios
+
     # # Weights
     # portfolios = [
     #     portfolio.with_columns(
@@ -33,4 +34,4 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str):
     #     for portfolio in portfolios
     # ]
 
-    return portfolios
+    # return portfolios

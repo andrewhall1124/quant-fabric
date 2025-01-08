@@ -43,3 +43,15 @@ export PYTHONPATH=/path/to/project/quant-fabric/:$PYTHONPATH
 ```
 
 Make sure to kill all running terminals and reopen for the environment to reset.
+
+### Alpaca API Keys
+You can get Alpaca API keys [here](https://alpaca.markets/learn/connect-to-alpaca-api)
+
+Then create a `.env` file in the root directory like this:
+
+```
+ALPACA_API_KEY=<api-key>
+ALPACA_API_SECRET_KEY=<api-secret-key>
+```
+
+Make sure to not put quotes around your api keys
