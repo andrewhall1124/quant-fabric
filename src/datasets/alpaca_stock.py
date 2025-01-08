@@ -14,15 +14,16 @@ import polars as pl
 from qdatabase import Database
 from src.datasets.alpaca_assets import AlpacaAssets
 
-class AlpacaStockMonthly():
+class AlpacaStock():
 
-    def __init__(self, start_date: date, end_date: date | None = date.today()) -> None:
+    def __init__(self, start_date: date, end_date: date | None = date.today(), interval: str = "daily") -> None:
         self.start_date = start_date
         self.end_date = end_date
+        self.interval = interval
 
         start = start_date.strftime('%Y-%m-%d')
         end = end_date.strftime('%Y-%m-%d')
-        self.table_name = f"ALPACA_STOCK_MONTHLY_{start}_{end}"
+        self.table_name = f"ALPACA_STOCK_{interval.upper()}_{start}_{end}"
 
         if not end_date:
             end_date = date.today()
@@ -36,7 +37,7 @@ class AlpacaStockMonthly():
         self.db = Database()
 
         # Create the core table if it doesn't already exist
-        self.core_table_name = 'ALPACA_STOCK_MONTHLY'
+        self.core_table_name = f'ALPACA_STOCK_{self.interval.upper()}'
         core_table_schema = {
             "ticker": pl.Utf8,              
             "date": pl.Date,
@@ -61,7 +62,7 @@ class AlpacaStockMonthly():
         self._merge()
 
     def load(self) -> pl.DataFrame:
-        core_table_name = 'ALPACA_STOCK_MONTHLY'
+        core_table_name = f'ALPACA_STOCK_{self.interval.upper()}'
         data = self.db.read(core_table_name)
 
         data = data.sort(by=['ticker', 'date'])
@@ -84,10 +85,12 @@ class AlpacaStockMonthly():
         # Get tradable symbols
         tickers = self._get_tickers()
 
+        timeframe_unit = TimeFrameUnit.Day if self.interval == 'daily' else TimeFrameUnit.Month
+
         # Get stock bars request
         stock_bar_request = StockBarsRequest(
             symbol_or_symbols=tickers,
-            timeframe=TimeFrame(1, TimeFrameUnit.Month),
+            timeframe=TimeFrame(1, timeframe_unit),
             start=self.start_date,
             end=self.end_date,
             adjustment=Adjustment.SPLIT,
@@ -149,14 +152,18 @@ class AlpacaStockMonthly():
         return assets['ticker'].to_list()
 
 if __name__ == '__main__':
-    years = range(2020,2025) # Unsure why years 2016-2019 don't have data...
-    for year in years:
-        print("-"*10 + f"{year}" + "-"*10)
-        start = date(year,1,1)
-        end = date(year, 12, 31)
-        dataset = AlpacaStockMonthly(
-            start_date=start,
-            end_date=end
-        ).download()
+    years = range(2024,2025) # Unsure why years 2016-2019 don't have data...
+    # for year in years:
+    #     for month in range(1,13):
+    year = 2024
+    month = 12
+    print("-"*10 + f" {year}-{month} " + "-"*10)
+    start = date(year,month,1)
+    end = date(year, month, 31)
+    dataset = AlpacaStock(
+        start_date=start,
+        end_date=end,
+        interval='daily'
+    ).download()
 
 # TODO: Adapt the dataset to check which dates are already downloaded before running (make an option 'redownload')

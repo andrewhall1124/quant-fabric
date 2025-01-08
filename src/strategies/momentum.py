@@ -1,6 +1,6 @@
 from qcomponents import ChunkedData
 from src.signals import momentum_signal
-from src.datasets import AlpacaStockMonthly
+from src.datasets import AlpacaStock
 from src.optimizers import decile_portfolio
 from functools import partial
 from datetime import date
@@ -14,7 +14,7 @@ def momentum_strategy(type: str = "daily") -> list[pl.DataFrame]:
     """
 
     # Pull raw data
-    raw_data = AlpacaStockMonthly(
+    raw_data = AlpacaStock(
         start_date=date(2020,1,1),
         end_date=date(2024,12,31)
     ).load()
@@ -39,7 +39,3 @@ def momentum_strategy(type: str = "daily") -> list[pl.DataFrame]:
     ]
 
     return portfolios_list
-
-if __name__ == "__main__":
-    result = momentum_strategy("monthly")
-    print(result)

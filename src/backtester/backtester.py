@@ -1,4 +1,4 @@
-from src.datasets import AlpacaStockMonthly
+from src.datasets import AlpacaStock
 from datetime import date 
 import polars as pl
 import seaborn as sns
@@ -12,7 +12,7 @@ class Backtester:
         self.strategy = strategy
 
     def run(self):
-        data = AlpacaStockMonthly(
+        data = AlpacaStock(
             start_date=self.start_date,
             end_date=self.end_date
         ).load().select('ticker', 'date', 'ret')
