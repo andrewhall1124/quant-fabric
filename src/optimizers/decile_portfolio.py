@@ -1,7 +1,8 @@
 import numpy as np
 import polars as pl
 
-def decile_portfolio(chunk: pl.DataFrame, signal: str):
+
+def decile_portfolio(chunk: pl.DataFrame, signal: str, weighting: str = "equal"):
     chunk = chunk.drop_nulls()
 
     # Calculate decile percentiles
@@ -12,26 +13,23 @@ def decile_portfolio(chunk: pl.DataFrame, signal: str):
     bins_expr = pl.when(pl.col(signal) <= values[0]).then(0)
     for i in range(1, len(values)):
         bins_expr = bins_expr.when(pl.col(signal) <= values[i]).then(i)
-    
+
     # Add the 'bins' column to the DataFrame
     binned_chunk = chunk.with_columns(bins_expr.alias("bin"))
 
     # Seperate portfolios
     portfolios = [
-        binned_chunk.filter(
-            pl.col('bin') == i
-        ).select(['date', 'ticker', signal, 'bin'])
+        binned_chunk.filter(pl.col("bin") == i).select(
+            ["date", "ticker", signal, "bin"]
+        )
         for i in range(10)
     ]
 
+    # Weights
+    if weighting == "equal":
+        portfolios = [
+            portfolio.with_columns(pl.lit(1 / len(portfolio)).alias("weight"))
+            for portfolio in portfolios
+        ]
+
     return portfolios
-
-    # # Weights
-    # portfolios = [
-    #     portfolio.with_columns(
-    #         pl.lit(1 / len(portfolio)).alias('weight')
-    #     )
-    #     for portfolio in portfolios
-    # ]
-
-    # return portfolios

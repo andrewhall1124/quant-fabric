@@ -2,6 +2,7 @@ import polars as pl
 import os
 import shutil
 
+
 class Database:
     def __init__(self):
         self._tables_dir = "qdatabase/.tables/"
@@ -10,7 +11,9 @@ class Database:
         os.makedirs(self._tables_dir, exist_ok=True)
         os.makedirs(self._archive_dir, exist_ok=True)
 
-    def create(self, table_name: str, data: pl.DataFrame, overwrite: bool = False) -> None:
+    def create(
+        self, table_name: str, data: pl.DataFrame, overwrite: bool = False
+    ) -> None:
         """
         Method for creating a table in the database. If no data is given, an empty table is created.
         All tables are stored locally as parquet files using polars.
@@ -21,8 +24,8 @@ class Database:
         if self.exists(table_name) and not overwrite:
             return
 
-        # Write non-empty or schema-defined DataFrame   
-        if data is not None or data.schema:  
+        # Write non-empty or schema-defined DataFrame
+        if data is not None or data.schema:
             data.write_parquet(table_path)
 
         # Write empty dataframe
@@ -32,7 +35,7 @@ class Database:
     def read(self, table_name: str) -> pl.DataFrame:
         table_path = self.get_table_path(table_name)
         return pl.read_parquet(table_path)
-    
+
     def insert(self, table_name: str, rows: pl.DataFrame) -> None:
         table = self.read(table_name)
         table = pl.concat([table, rows])
@@ -49,7 +52,7 @@ class Database:
 
     def get_table_path(self, table_name: str) -> str:
         return os.path.join(self._tables_dir, f"{table_name}.parquet")
-    
+
     def exists(self, table_name: str) -> bool:
         table_path = self.get_table_path(table_name)
         return os.path.exists(table_path)

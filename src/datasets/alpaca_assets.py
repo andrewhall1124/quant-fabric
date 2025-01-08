@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import polars as pl
 from qdatabase import Database
 
+
 class AlpacaAssets:
 
     def __init__(self, overwrite: bool = False) -> None:
@@ -39,40 +40,40 @@ class AlpacaAssets:
 
         # Parse raw assets data
         parsed_assets = [
-                {
-                    "id": str(asset.id),
-                    "asset_class": asset.asset_class.value,
-                    "exchange": asset.exchange.value,
-                    "ticker": asset.symbol,
-                    "name": asset.name,
-                    "status": asset.status.value,
-                    "tradable": asset.tradable,
-                    "marginable": asset.marginable,
-                    "shortable": asset.shortable,
-                    "easy_to_borrow": asset.easy_to_borrow,
-                    "fractionable": asset.fractionable,
-                    "min_order_size": asset.min_order_size,
-                    "min_trade_increment": asset.min_trade_increment,
-                    "price_increment": asset.price_increment,
-                    "maintenance_margin_requirement": asset.maintenance_margin_requirement,
-                    "attributes": ", ".join(asset.attributes) if asset.attributes else None
-                }
-                for asset in assets
-            ]
+            {
+                "id": str(asset.id),
+                "asset_class": asset.asset_class.value,
+                "exchange": asset.exchange.value,
+                "ticker": asset.symbol,
+                "name": asset.name,
+                "status": asset.status.value,
+                "tradable": asset.tradable,
+                "marginable": asset.marginable,
+                "shortable": asset.shortable,
+                "easy_to_borrow": asset.easy_to_borrow,
+                "fractionable": asset.fractionable,
+                "min_order_size": asset.min_order_size,
+                "min_trade_increment": asset.min_trade_increment,
+                "price_increment": asset.price_increment,
+                "maintenance_margin_requirement": asset.maintenance_margin_requirement,
+                "attributes": ", ".join(asset.attributes) if asset.attributes else None,
+            }
+            for asset in assets
+        ]
         data = pl.DataFrame(parsed_assets)
 
         data = data.filter(
-            pl.col('status') == 'active',
-            pl.col('tradable') == True,
-            pl.col('fractionable') == True,
-            pl.col('shortable') == True
+            pl.col("status") == "active",
+            pl.col("tradable") == True,
+            pl.col("fractionable") == True,
+            pl.col("shortable") == True,
         )
 
         self.db.create(self._table_name, data, overwrite=self.overwrite)
-    
+
     def load(self):
-        
+
         if not self._already_downloaded():
             self.download()
-        
+
         return self.db.read(self._table_name)

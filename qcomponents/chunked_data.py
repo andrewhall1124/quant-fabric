@@ -13,7 +13,7 @@ class ChunkedData:
 
             start_date = unique_dates[i - window]
             end_date = unique_dates[i - 1]
-            
+
             chunk = data.filter(
                 (pl.col("date") >= start_date) & (pl.col("date") <= end_date)
             ).select(columns)
@@ -31,28 +31,13 @@ class ChunkedData:
     def apply_portfolio_gen(self, portfolio_generator) -> list[pl.DataFrame]:
         portfolios = []
         for chunk in self.chunks:
-            portfolios.append(
-                portfolio_generator(chunk)
-            )
+            portfolios.append(portfolio_generator(chunk))
         return portfolios
-    
+
     def remove_chunks(self):
         """Remove chunks that do not have the full window of data."""
-        self._chunks = [
-            chunk
-            for chunk in self._chunks
-            if (chunk['date'].max().year - chunk['date'].min().year) * 12 
-               + (chunk['date'].max().month - chunk['date'].min().month) == self.window - 1
-        ]
-
-        self._chunks = [
-            chunk 
-            for chunk in self._chunks 
-            if len(chunk.drop_nulls()) > 10 # This is just for now.
-        ]
-
+        self._chunks = [chunk for chunk in self._chunks if len(chunk.drop_nulls()) > 10]
 
     @property
     def chunks(self) -> list[pl.DataFrame]:
         return self._chunks
-    
