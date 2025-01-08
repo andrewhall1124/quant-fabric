@@ -12,14 +12,21 @@ def reversal_strategy(interval: str = "daily") -> list[pl.DataFrame]:
     This is the script for the classic short term reversal trading strategy.
     It should be able to be passed to both a backtester and a live/paper trader.
     """
+    match interval:
+        case "daily":
+            window = 23
+        case "monthly":
+            window = 1
 
     # Pull raw data
     raw_data = AlpacaStock(
-        start_date=date(2020, 1, 1), end_date=date(2024, 12, 31), interval="daily"
+        start_date=date(2020, 1, 1), 
+        end_date=date(2024, 12, 31), 
+        interval=interval
     ).load()
 
     # Create chunks
-    chunked_data = ChunkedData(raw_data, 23, ["date", "ticker", "ret"])
+    chunked_data = ChunkedData(raw_data, window, ["date", "ticker", "ret"])
 
     # Apply signal transformations
     chunked_data.apply_signal_transform(partial(reversal_signal, interval=interval))

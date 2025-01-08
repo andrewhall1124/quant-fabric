@@ -21,7 +21,9 @@ def momentum_strategy(interval: str = "daily") -> list[pl.DataFrame]:
 
     # Pull raw data
     raw_data = AlpacaStock(
-        start_date=date(2020, 1, 1), end_date=date(2024, 12, 31), interval="monthly"
+        start_date=date(2020, 1, 1), 
+        end_date=date(2024, 12, 31), 
+        interval=interval
     ).load()
 
     # Create chunks
