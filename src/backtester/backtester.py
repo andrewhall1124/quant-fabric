@@ -3,7 +3,19 @@ from datetime import date
 import polars as pl
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 
+class Timer:
+    def __init__(self):
+        self.temp = time.time()
+
+    def log(self, action):
+        now = time.time()
+        statement = f"-- {action} executed after {now - self.temp:.2f} seconds --"
+        self.temp = now
+        print(statement)
+
+timer = Timer()
 
 class Backtester:
 
@@ -23,12 +35,16 @@ class Backtester:
             .load()
             .select("ticker", "date", "ret")
         )
+        timer.log("Data loaded")
 
         portfolios = self.strategy()
+        timer.log("Strategy ran")
 
         portfolios = pl.concat(portfolios)
+        timer.log("Portfolios concatenated")
 
         merged = data.join(portfolios, how="inner", on=["date", "ticker"])
+        timer.log("Dataframes joined")
 
         merged = merged.with_columns(
             (pl.col("weight") * pl.col("ret")).alias("weighted_ret")

@@ -3,10 +3,10 @@ from backtester import Backtester
 from functools import partial
 from datetime import date
 
-print("\n" + "-" * 50 + " Last Period Portfolio " + "-" * 50)
+# print("\n" + "-" * 50 + " Last Period Portfolio " + "-" * 50)
 
-portfolios = momentum_strategy(interval="monthly")
-print(portfolios[-1])
+# portfolios = momentum_strategy(interval="monthly")
+# print(portfolios[-1])
 
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
 
