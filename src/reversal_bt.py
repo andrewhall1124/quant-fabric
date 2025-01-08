@@ -1,4 +1,4 @@
-from strategies import momentum_strategy, reversal_strategy
+from strategies import reversal_strategy
 from backtester import Backtester
 from functools import partial
 from datetime import date
