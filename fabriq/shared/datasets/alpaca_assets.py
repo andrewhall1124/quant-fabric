@@ -11,7 +11,7 @@ from datetime import date
 import os
 from dotenv import load_dotenv
 import polars as pl
-from qdatabase import Database
+from fabriq.shared.database import Database
 
 
 class AlpacaAssets:

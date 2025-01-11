@@ -1,4 +1,4 @@
-from src.datasets import AlpacaStock
+from fabriq.shared.datasets import AlpacaStock
 from datetime import date
 import polars as pl
 import seaborn as sns

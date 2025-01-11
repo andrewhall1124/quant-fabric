@@ -11,8 +11,8 @@ from datetime import date
 import os
 from dotenv import load_dotenv
 import polars as pl
-from qdatabase import Database
-from src.datasets.alpaca_assets import AlpacaAssets
+from fabriq.shared.database import Database
+from fabriq.shared.datasets import AlpacaAssets
 
 
 class AlpacaStock:

@@ -1,5 +1,5 @@
-from strategies import momentum_strategy
-from backtester import Backtester
+from fabriq.shared.strategies import momentum_strategy
+from fabriq.research.backtester import Backtester
 from functools import partial
 from datetime import date
 
