@@ -21,15 +21,14 @@ class Backtester:
         self.strategy = strategy(interval)
 
     def run(self):
-        data = (
-            AlpacaStock(
-                start_date=self.start_date,
-                end_date=self.end_date,
-                interval=self.interval,
-            )
-            .load()
-            .select("ticker", "date", "ret")
+
+        dataset = AlpacaStock(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            interval=self.interval,
         )
+        dataset.download()
+        data = dataset.load().select("ticker", "date", "ret")
 
         # Create chunks
         chunked_data = ChunkedData(

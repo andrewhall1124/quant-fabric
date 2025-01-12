@@ -24,7 +24,7 @@ class AlpacaStock:
         start_date: date,
         end_date: date,
         interval: Interval,
-        redownload: bool = False
+        redownload: bool = False,
     ) -> None:
         self.start_date = start_date
         self.end_date = end_date or date.today()
@@ -68,15 +68,17 @@ class AlpacaStock:
         if not self.download_intervals:
             print("All data already downloaded")
             return
-        
-        for download_interval in tqdm(self.download_intervals, desc="Downloading missing data"):
-            self.start_date = download_interval['start']
-            self.end_date = download_interval['end']
+
+        for download_interval in tqdm(
+            self.download_intervals, desc="Downloading missing data"
+        ):
+            self.start_date = download_interval["start"]
+            self.end_date = download_interval["end"]
 
             start_str = self.start_date.strftime("%Y-%m-%d")
             end_str = self.end_date.strftime("%Y-%m-%d")
 
-            print("-"*20 + f" {start_str} -> {end_str} " + "-"*20)
+            print("-" * 20 + f" {start_str} -> {end_str} " + "-" * 20)
             try:
                 self._download_and_stage()
                 self._transform()
@@ -84,7 +86,6 @@ class AlpacaStock:
 
             except ValueError as e:
                 print(e)
-
 
     def load(self) -> pl.DataFrame:
 
@@ -101,52 +102,56 @@ class AlpacaStock:
         )
 
         return data
-    
+
     def _get_download_intervals(self):
-        dates = self.db.read(self.core_table_name).select('date').unique().sort(by='date')
+        dates = (
+            self.db.read(self.core_table_name).select("date").unique().sort(by="date")
+        )
 
         nyse = ecals.get_calendar("XNYS")
         schedule = nyse.sessions_in_range(self.start_date, self.end_date).to_list()
-        schedule = pl.DataFrame(schedule).rename({'column_0': 'date'}).with_columns(
-            pl.col('date').dt.date()
+        schedule = (
+            pl.DataFrame(schedule)
+            .rename({"column_0": "date"})
+            .with_columns(pl.col("date").dt.date())
         )
 
         # Get missing dates
         if self.interval == Interval.MONTHLY:
-            schedule = schedule.with_columns(
-                pl.col('date').dt.truncate("1mo")
-            ).unique()
+            schedule = schedule.with_columns(pl.col("date").dt.truncate("1mo")).unique()
 
-        missing_dates = schedule.join(
-            dates,
-            on='date',
-            how='anti'
-        ).sort(by='date')
+        missing_dates = schedule.join(dates, on="date", how="anti").sort(by="date")
 
         if self.interval == Interval.DAILY:
             missing_dates = missing_dates.with_columns(
-                pl.col('date').dt.truncate("1mo")
+                pl.col("date").dt.truncate("1mo")
             ).unique()
 
-            self.download_intervals = missing_dates.with_columns(
-                pl.col('date').alias('start'),
-                pl.col('date').dt.offset_by("1mo").alias('end')
-            ).drop('date').to_dicts()
+            self.download_intervals = (
+                missing_dates.with_columns(
+                    pl.col("date").alias("start"),
+                    pl.col("date").dt.offset_by("1mo").alias("end"),
+                )
+                .drop("date")
+                .to_dicts()
+            )
 
         elif self.interval == Interval.MONTHLY:
             missing_dates = missing_dates.with_columns(
-                pl.col('date').dt.truncate("1y")
+                pl.col("date").dt.truncate("1y")
             ).unique()
 
             self.download_intervals = missing_dates.with_columns(
-                pl.col('date').alias('start'),
-                pl.col('date').dt.offset_by("1y").alias('end')
+                pl.col("date").alias("start"),
+                pl.col("date").dt.offset_by("1y").alias("end"),
             ).to_dicts()
 
         else:
             raise ValueError(f"Interval '{self.interval.value}' not supported.")
 
-    def _download_and_stage(self,):
+    def _download_and_stage(
+        self,
+    ):
         if self.db.exists(f"{self.table_name}_STG"):
             return
 
@@ -154,7 +159,9 @@ class AlpacaStock:
         tickers = self._get_tickers()
 
         timeframe_unit = (
-            TimeFrameUnit.Day if self.interval == Interval.DAILY else TimeFrameUnit.Month
+            TimeFrameUnit.Day
+            if self.interval == Interval.DAILY
+            else TimeFrameUnit.Month
         )
 
         # Get stock bars request
@@ -217,7 +224,7 @@ class AlpacaStock:
         print("Getting available assets")
         assets = AlpacaAssets().load()
         return assets["ticker"].to_list()
-    
+
     @property
     def table_name(self):
         start = self.start_date.strftime("%Y-%m-%d")
@@ -230,10 +237,8 @@ class AlpacaStock:
 
 
 if __name__ == "__main__":
-   start = date(2022, 1, 1)
-   end = date(2024, 12, 31)
-   dataset = AlpacaStock(
-       start_date=start,
-       end_date=end,
-       interval=Interval.DAILY
-   ).download()
+    start = date(2022, 1, 1)
+    end = date(2024, 12, 31)
+    dataset = AlpacaStock(
+        start_date=start, end_date=end, interval=Interval.DAILY
+    ).download()

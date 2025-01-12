@@ -8,7 +8,7 @@ print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
 
 
 bt = Backtester(
-    start_date=date(2020, 1, 1),
+    start_date=date(2016, 1, 1),
     end_date=date(2024, 12, 31),
     interval=Interval.MONTHLY,
     strategy=MomentumStrategy,
