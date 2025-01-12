@@ -1,15 +1,17 @@
-from fabriq.shared.enums import Interval, Weighting
 from fabriq.shared.optimizers import decile_portfolio
-from fabriq.shared.strategies.strategy import Strategy
+from fabriq.shared.enums import Interval, Weighting
 import polars as pl
+from fabriq.shared.strategies.strategy import Strategy
 
 
-class MomentumStrategy(Strategy):
-    def __init__(self, interval: Interval):
+class ReversalStrategy(Strategy):
+    def __init__(self, interval: Interval) -> None:
         self._interval = interval
-        self._window = {Interval.DAILY: 231, Interval.WEEKLY: 12, Interval.MONTHLY: 12}[
-            self._interval
-        ]
+        self._window = {
+            Interval.MONTHLY: 2,
+            Interval.WEEKLY: 24,
+            Interval.DAILY: 24,
+        }[self._interval]
 
     def compute_portfolio(self, chunk: pl.DataFrame) -> list[pl.DataFrame]:
 
@@ -17,11 +19,11 @@ class MomentumStrategy(Strategy):
         chunk = chunk.with_columns(pl.col("ret").log1p().alias("logret")).with_columns(
             pl.col("logret")
             .rolling_sum(
-                window_size=self.window - 1, min_periods=self.window - 1, center=False
+                window_size=self._window - 1, min_periods=self._window - 1, center=False
             )
             .shift(1)  # Lag signal
             .over("ticker")
-            .alias("mom")
+            .alias("rev")
         )
 
         chunk = chunk.drop_nulls()
@@ -29,13 +31,12 @@ class MomentumStrategy(Strategy):
         if len(chunk) < 10:
             return pl.DataFrame()
 
-        # Generate portfolios
-        portfolios = decile_portfolio(chunk, "mom", Weighting.EQUAL)
+        portfolios = decile_portfolio(chunk, "rev", Weighting.EQUAL)
 
-        # Long good momentum, short poor momentum
+        # Long poor reversal, short good reversal
         long_short_portfolio = pl.concat(
-            [portfolios[0].with_columns(pl.col("weight") * -1), portfolios[9]]
-        ).drop(["bin", "mom"])
+            [portfolios[0], portfolios[9].with_columns(pl.col("weight") * -1)]
+        ).drop(["bin", "rev"])
 
         return long_short_portfolio
 

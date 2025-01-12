@@ -1,8 +1,10 @@
 import numpy as np
 import polars as pl
+from fabriq.shared.enums import Weighting
+
 
 def decile_portfolio(
-    chunk: pl.DataFrame, signal: str, weighting: str = "equal"
+    chunk: pl.DataFrame, signal: str, weighting: Weighting
 ) -> list[pl.DataFrame]:
     chunk = chunk.drop_nulls()
 
@@ -27,7 +29,7 @@ def decile_portfolio(
     ]
 
     # Weights
-    if weighting == "equal":
+    if weighting == Weighting.EQUAL:
         portfolios = [
             portfolio.with_columns(pl.lit(1 / len(portfolio)).alias("weight"))
             for portfolio in portfolios
