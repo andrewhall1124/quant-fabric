@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 
 import polars as pl
 from alpaca.data import StockHistoricalDataClient
@@ -9,6 +9,8 @@ from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.trading import TradingClient
 from dotenv import load_dotenv
+import exchange_calendars as ecals
+from tqdm import tqdm
 
 from fabriq.shared.database import Database
 from fabriq.shared.datasets.alpaca_assets import AlpacaAssets
@@ -22,14 +24,13 @@ class AlpacaStock:
         start_date: date,
         end_date: date,
         interval: Interval,
+        redownload: bool = False
     ) -> None:
         self.start_date = start_date
         self.end_date = end_date or date.today()
         self.interval = interval
-
-        start = start_date.strftime("%Y-%m-%d")
-        end = end_date.strftime("%Y-%m-%d")
-        self.table_name = f"ALPACA_STOCK_{interval.value}_{start}_{end}"
+        self.redownload = redownload
+        self.download_intervals = []
 
         if not end_date:
             end_date = date.today()
@@ -43,7 +44,6 @@ class AlpacaStock:
         self.db = Database()
 
         # Create the core table if it doesn't already exist
-        self.core_table_name = f"ALPACA_STOCK_{self.interval.value}"
         core_table_schema = {
             "ticker": pl.Utf8,
             "date": pl.Date,
@@ -61,14 +61,34 @@ class AlpacaStock:
         )
 
     def download(self):
-        self._download_and_stage()
-        self._transform()
-        self._merge()
+        if not self.redownload:
+            print("Getting download intervals")
+            self._get_download_intervals()
+
+        if not self.download_intervals:
+            print("All data already downloaded")
+            return
+        
+        for download_interval in tqdm(self.download_intervals, desc="Downloading missing data"):
+            self.start_date = download_interval['start']
+            self.end_date = download_interval['end']
+
+            start_str = self.start_date.strftime("%Y-%m-%d")
+            end_str = self.end_date.strftime("%Y-%m-%d")
+
+            print("-"*20 + f" {start_str} -> {end_str} " + "-"*20)
+            try:
+                self._download_and_stage()
+                self._transform()
+                self._merge()
+
+            except ValueError as e:
+                print(e)
+
 
     def load(self) -> pl.DataFrame:
-        core_table_name = f"ALPACA_STOCK_{self.interval.value}"
 
-        data = self.db.read(core_table_name)
+        data = self.db.read(self.core_table_name)
 
         data = data.sort(by=["ticker", "date"])
 
@@ -81,8 +101,52 @@ class AlpacaStock:
         )
 
         return data
+    
+    def _get_download_intervals(self):
+        dates = self.db.read(self.core_table_name).select('date').unique().sort(by='date')
 
-    def _download_and_stage(self):
+        nyse = ecals.get_calendar("XNYS")
+        schedule = nyse.sessions_in_range(self.start_date, self.end_date).to_list()
+        schedule = pl.DataFrame(schedule).rename({'column_0': 'date'}).with_columns(
+            pl.col('date').dt.date()
+        )
+
+        # Get missing dates
+        if self.interval == Interval.MONTHLY:
+            schedule = schedule.with_columns(
+                pl.col('date').dt.truncate("1mo")
+            ).unique()
+
+        missing_dates = schedule.join(
+            dates,
+            on='date',
+            how='anti'
+        ).sort(by='date')
+
+        if self.interval == Interval.DAILY:
+            missing_dates = missing_dates.with_columns(
+                pl.col('date').dt.truncate("1mo")
+            ).unique()
+
+            self.download_intervals = missing_dates.with_columns(
+                pl.col('date').alias('start'),
+                pl.col('date').dt.offset_by("1mo").alias('end')
+            ).drop('date').to_dicts()
+
+        elif self.interval == Interval.MONTHLY:
+            missing_dates = missing_dates.with_columns(
+                pl.col('date').dt.truncate("1y")
+            ).unique()
+
+            self.download_intervals = missing_dates.with_columns(
+                pl.col('date').alias('start'),
+                pl.col('date').dt.offset_by("1y").alias('end')
+            ).to_dicts()
+
+        else:
+            raise ValueError(f"Interval '{self.interval.value}' not supported.")
+
+    def _download_and_stage(self,):
         if self.db.exists(f"{self.table_name}_STG"):
             return
 
@@ -90,7 +154,7 @@ class AlpacaStock:
         tickers = self._get_tickers()
 
         timeframe_unit = (
-            TimeFrameUnit.Day if self.interval == "daily" else TimeFrameUnit.Month
+            TimeFrameUnit.Day if self.interval == Interval.DAILY else TimeFrameUnit.Month
         )
 
         # Get stock bars request
@@ -108,6 +172,9 @@ class AlpacaStock:
         # Parsing
         data = bar_set.df.reset_index()
         stage_table = pl.from_pandas(data)
+
+        if stage_table.is_empty():
+            raise ValueError("Empty dataframe")
 
         # Create stage table
         print("Staging")
@@ -150,17 +217,23 @@ class AlpacaStock:
         print("Getting available assets")
         assets = AlpacaAssets().load()
         return assets["ticker"].to_list()
+    
+    @property
+    def table_name(self):
+        start = self.start_date.strftime("%Y-%m-%d")
+        end = self.end_date.strftime("%Y-%m-%d")
+        return f"ALPACA_STOCK_{self.interval.value}_{start}_{end}"
+
+    @property
+    def core_table_name(self):
+        return f"ALPACA_STOCK_{self.interval.value}"
 
 
 if __name__ == "__main__":
-    years = range(2024, 2025)  # Unsure why years 2016-2019 don't have data...
-    # for year in years:
-    #     for month in range(1,13):
-    year = 2024
-    month = 12
-    print("-" * 10 + f" {year}-{month} " + "-" * 10)
-    start = date(year, month, 1)
-    end = date(year, month, 31)
-    dataset = AlpacaStock(start_date=start, end_date=end, interval="daily").download()
-
-# TODO: Adapt the dataset to check which dates are already downloaded before running (make an option 'redownload')
+   start = date(2022, 1, 1)
+   end = date(2024, 12, 31)
+   dataset = AlpacaStock(
+       start_date=start,
+       end_date=end,
+       interval=Interval.DAILY
+   ).download()

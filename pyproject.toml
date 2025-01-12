@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "alpaca-py>=0.35.0",
     "black>=24.10.0",
+    "exchange-calendars>=4.7",
     "ipykernel>=6.29.5",
     "isort>=5.13.2",
     "matplotlib>=3.10.0",
