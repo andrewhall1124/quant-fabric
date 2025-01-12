@@ -5,8 +5,8 @@ import shutil
 
 class Database:
     def __init__(self):
-        self._tables_dir = "qdatabase/.tables/"
-        self._archive_dir = "qdatabase/.archive/"
+        self._tables_dir = "fabriq/shared/database/.tables/"
+        self._archive_dir = "fabriq/shared/database/.archive/"
 
         os.makedirs(self._tables_dir, exist_ok=True)
         os.makedirs(self._archive_dir, exist_ok=True)

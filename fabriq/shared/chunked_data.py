@@ -1,5 +1,6 @@
 import polars as pl
 from typing import Self
+from fabriq.shared.strategies.strategy import Strategy
 
 
 class ChunkedData:
@@ -30,9 +31,17 @@ class ChunkedData:
 
     def apply_portfolio_gen(self, portfolio_generator) -> list[pl.DataFrame]:
         portfolios = []
-        for chunk in self.chunks:
+        for chunk in self._chunks:
             portfolios.append(portfolio_generator(chunk))
         return portfolios
+
+    def apply_strategy(self, strategy: Strategy) -> list[pl.DataFrame]:
+        portfolios_list = []
+        for chunk in self._chunks:
+            portfolios = strategy.compute_portfolio(chunk)
+            if not portfolios.is_empty():
+                portfolios_list.append(portfolios)
+        return portfolios_list
 
     def remove_chunks(self):
         """Remove chunks that do not have the full window of data."""

@@ -1,13 +1,7 @@
-from alpaca.data import StockHistoricalDataClient
-from alpaca.data.requests import StockBarsRequest
-from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
-from alpaca.data.enums import Adjustment, DataFeed
-from alpaca.data.models.bars import BarSet
 from alpaca.trading import TradingClient
 from alpaca.trading import GetAssetsRequest
 from alpaca.trading.enums import AssetClass, AssetStatus
 from alpaca.trading.models import Asset
-from datetime import date
 import os
 from dotenv import load_dotenv
 import polars as pl

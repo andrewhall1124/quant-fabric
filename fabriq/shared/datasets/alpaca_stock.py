@@ -4,15 +4,13 @@ from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.data.enums import Adjustment, DataFeed
 from alpaca.data.models.bars import BarSet
 from alpaca.trading import TradingClient
-from alpaca.trading import GetAssetsRequest
-from alpaca.trading.enums import AssetClass, AssetStatus
-from alpaca.trading.models import Asset
 from datetime import date
 import os
 from dotenv import load_dotenv
 import polars as pl
 from fabriq.shared.database import Database
-from fabriq.shared.datasets import AlpacaAssets
+from fabriq.shared.datasets.alpaca_assets import AlpacaAssets
+from fabriq.shared.enums import Interval
 
 
 class AlpacaStock:
@@ -20,16 +18,16 @@ class AlpacaStock:
     def __init__(
         self,
         start_date: date,
-        end_date: date | None = date.today(),
-        interval: str = "daily",
+        end_date: date,
+        interval: Interval,
     ) -> None:
         self.start_date = start_date
-        self.end_date = end_date
+        self.end_date = end_date or date.today()
         self.interval = interval
 
         start = start_date.strftime("%Y-%m-%d")
         end = end_date.strftime("%Y-%m-%d")
-        self.table_name = f"ALPACA_STOCK_{interval.upper()}_{start}_{end}"
+        self.table_name = f"ALPACA_STOCK_{interval.value}_{start}_{end}"
 
         if not end_date:
             end_date = date.today()
@@ -43,7 +41,7 @@ class AlpacaStock:
         self.db = Database()
 
         # Create the core table if it doesn't already exist
-        self.core_table_name = f"ALPACA_STOCK_{self.interval.upper()}"
+        self.core_table_name = f"ALPACA_STOCK_{self.interval.value}"
         core_table_schema = {
             "ticker": pl.Utf8,
             "date": pl.Date,
@@ -66,7 +64,8 @@ class AlpacaStock:
         self._merge()
 
     def load(self) -> pl.DataFrame:
-        core_table_name = f"ALPACA_STOCK_{self.interval.upper()}"
+        core_table_name = f"ALPACA_STOCK_{self.interval.value}"
+
         data = self.db.read(core_table_name)
 
         data = data.sort(by=["ticker", "date"])
