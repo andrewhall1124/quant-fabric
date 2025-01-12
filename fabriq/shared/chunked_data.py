@@ -1,6 +1,6 @@
 import polars as pl
-from typing import Self
 from fabriq.shared.strategies.strategy import Strategy
+from tqdm import tqdm
 
 
 class ChunkedData:
@@ -10,7 +10,7 @@ class ChunkedData:
         unique_dates = data.select("date").unique().sort(by="date")["date"].to_list()
         chunks = []
 
-        for i in range(window, len(unique_dates) + 1):
+        for i in tqdm(range(window, len(unique_dates) + 1), desc="Chunking data"):
 
             start_date = unique_dates[i - window]
             end_date = unique_dates[i - 1]
@@ -23,29 +23,13 @@ class ChunkedData:
 
         self._chunks: list[pl.DataFrame] = chunks
 
-    def apply_signal_transform(self, signal) -> Self:
-        for i, chunk in enumerate(self.chunks):
-            self.chunks[i] = signal(chunk)
-
-        return self
-
-    def apply_portfolio_gen(self, portfolio_generator) -> list[pl.DataFrame]:
-        portfolios = []
-        for chunk in self._chunks:
-            portfolios.append(portfolio_generator(chunk))
-        return portfolios
-
     def apply_strategy(self, strategy: Strategy) -> list[pl.DataFrame]:
         portfolios_list = []
-        for chunk in self._chunks:
+        for chunk in tqdm(self._chunks, desc="Running strategy"):
             portfolios = strategy.compute_portfolio(chunk)
             if not portfolios.is_empty():
                 portfolios_list.append(portfolios)
         return portfolios_list
-
-    def remove_chunks(self):
-        """Remove chunks that do not have the full window of data."""
-        self._chunks = [chunk for chunk in self._chunks if len(chunk.drop_nulls()) > 10]
 
     @property
     def chunks(self) -> list[pl.DataFrame]:

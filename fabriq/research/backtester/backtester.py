@@ -5,6 +5,7 @@ from datetime import date
 import polars as pl
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 
 
 class Backtester:
@@ -58,9 +59,11 @@ class Backtester:
             )
         )
 
+        # Output
+        print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
+
         print(pnl)
 
-        # Cumulative product plot
         sns.lineplot(data=pnl, x="date", y="cumprod")
         plt.ylabel("Cummulative returns (product)")
         plt.xlabel("Date")
