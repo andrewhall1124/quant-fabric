@@ -24,8 +24,8 @@ class MomentumStrategy(Strategy):
             .alias("mom")
         )
 
+        # If there isn't enough data return an empty portfolio
         chunk = chunk.drop_nulls()
-
         if len(chunk) < 10:
             return pl.DataFrame()
 

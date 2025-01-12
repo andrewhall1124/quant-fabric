@@ -1,5 +1,5 @@
 from fabriq.research.backtester import Backtester
-from fabriq.shared.strategies.reversal_strategy import ReversalStrategy
+from fabriq.shared.strategies import ReversalStrategy
 from fabriq.shared.enums import Interval
 from datetime import date
 

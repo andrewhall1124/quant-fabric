@@ -1,4 +1,4 @@
-from fabriq.shared.strategies.momentum_strategy import MomentumStrategy
+from fabriq.shared.strategies import MomentumStrategy
 from fabriq.research.backtester import Backtester
 from datetime import date
 from fabriq.shared.enums import Interval

@@ -1,6 +1,5 @@
-from fabriq.shared.datasets.alpaca_stock import AlpacaStock
+from fabriq.shared.datasets import AlpacaStock
 from fabriq.shared.chunked_data import ChunkedData
-from fabriq.shared.strategies.momentum_strategy import MomentumStrategy
 from fabriq.shared.strategies.strategy import Strategy
 from datetime import date
 import polars as pl
