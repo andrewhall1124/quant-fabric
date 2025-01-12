@@ -1,7 +1,8 @@
-from fabriq.shared.strategies import MomentumStrategy
-from fabriq.research.backtester import Backtester
 from datetime import date
+
+from fabriq.research.backtester import Backtester
 from fabriq.shared.enums import Interval
+from fabriq.shared.strategies import MomentumStrategy
 
 print("\n" + "-" * 50 + " Backtest P&L " + "-" * 50)
 

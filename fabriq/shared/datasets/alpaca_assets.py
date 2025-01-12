@@ -1,10 +1,11 @@
-from alpaca.trading import TradingClient
-from alpaca.trading import GetAssetsRequest
+import os
+
+import polars as pl
+from alpaca.trading import GetAssetsRequest, TradingClient
 from alpaca.trading.enums import AssetClass, AssetStatus
 from alpaca.trading.models import Asset
-import os
 from dotenv import load_dotenv
-import polars as pl
+
 from fabriq.shared.database import Database
 
 

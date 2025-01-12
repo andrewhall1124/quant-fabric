@@ -1,6 +1,7 @@
 import polars as pl
-from fabriq.shared.strategies.strategy import Strategy
 from tqdm import tqdm
+
+from fabriq.shared.strategies.strategy import Strategy
 
 
 class ChunkedData:

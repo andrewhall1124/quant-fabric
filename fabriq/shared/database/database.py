@@ -1,6 +1,7 @@
-import polars as pl
 import os
 import shutil
+
+import polars as pl
 
 
 class Database:

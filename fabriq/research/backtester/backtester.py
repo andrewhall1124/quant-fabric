@@ -1,11 +1,13 @@
-from fabriq.shared.datasets import AlpacaStock
-from fabriq.shared.chunked_data import ChunkedData
-from fabriq.shared.strategies.strategy import Strategy
+import time
 from datetime import date
+
+import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
-import matplotlib.pyplot as plt
-import time
+
+from fabriq.shared.chunked_data import ChunkedData
+from fabriq.shared.datasets import AlpacaStock
+from fabriq.shared.strategies.strategy import Strategy
 
 
 class Backtester:

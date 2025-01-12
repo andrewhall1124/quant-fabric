@@ -1,13 +1,15 @@
+import os
+from datetime import date
+
+import polars as pl
 from alpaca.data import StockHistoricalDataClient
-from alpaca.data.requests import StockBarsRequest
-from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.data.enums import Adjustment, DataFeed
 from alpaca.data.models.bars import BarSet
+from alpaca.data.requests import StockBarsRequest
+from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
 from alpaca.trading import TradingClient
-from datetime import date
-import os
 from dotenv import load_dotenv
-import polars as pl
+
 from fabriq.shared.database import Database
 from fabriq.shared.datasets.alpaca_assets import AlpacaAssets
 from fabriq.shared.enums import Interval

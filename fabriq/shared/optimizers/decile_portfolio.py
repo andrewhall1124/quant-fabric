@@ -1,5 +1,6 @@
 import numpy as np
 import polars as pl
+
 from fabriq.shared.enums import Weighting
 
 

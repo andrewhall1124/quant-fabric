@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 import polars as pl
+
 from fabriq.shared.enums import Interval
 
 

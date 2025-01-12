@@ -1,6 +1,7 @@
-from fabriq.shared.optimizers import decile_portfolio
-from fabriq.shared.enums import Interval, Weighting
 import polars as pl
+
+from fabriq.shared.enums import Interval, Weighting
+from fabriq.shared.optimizers import decile_portfolio
 from fabriq.shared.strategies.strategy import Strategy
 
 

@@ -1,7 +1,9 @@
-from shared.database import Database
+import os
+
 import polars as pl
 from polars.testing import assert_frame_equal
-import os
+
+from shared.database import Database
 
 data = pl.DataFrame(
     [

@@ -1,7 +1,8 @@
-from fabriq.research.backtester import Backtester
-from fabriq.shared.strategies import ReversalStrategy
-from fabriq.shared.enums import Interval
 from datetime import date
+
+from fabriq.research.backtester import Backtester
+from fabriq.shared.enums import Interval
+from fabriq.shared.strategies import ReversalStrategy
 
 bt = Backtester(
     start_date=date(2024, 1, 1),
