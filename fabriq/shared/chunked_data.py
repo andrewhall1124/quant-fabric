@@ -1,20 +1,35 @@
 import polars as pl
 from tqdm import tqdm
+import exchange_calendars as ecals
 
 from fabriq.shared.strategies.strategy import Strategy
 
 
 class ChunkedData:
     def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
-        self.window = window
+        min_date = data["date"].min()
+        max_date = data["date"].max()
 
-        unique_dates = data.select("date").unique().sort(by="date")["date"].to_list()
+        nyse = ecals.get_calendar("XNYS")
+        schedule = nyse.sessions_in_range(min_date, max_date).to_list()
+        schedule = (
+            pl.DataFrame(schedule)
+            .rename({"column_0": "date"})
+            .with_columns(pl.col("date").dt.date())
+        )
+
+        schedule = (
+            schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)
+            .sort(by="date")["date"]
+            .to_list()
+        )
+
         chunks = []
 
-        for i in tqdm(range(window, len(unique_dates) + 1), desc="Chunking data"):
+        for i in tqdm(range(window, len(schedule) + 1), desc="Chunking data"):
 
-            start_date = unique_dates[i - window]
-            end_date = unique_dates[i - 1]
+            start_date = schedule[i - window]
+            end_date = schedule[i - 1]
 
             chunk = data.filter(
                 (pl.col("date") >= start_date) & (pl.col("date") <= end_date)

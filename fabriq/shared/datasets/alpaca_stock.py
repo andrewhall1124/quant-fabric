@@ -72,11 +72,11 @@ class AlpacaStock:
         for download_interval in tqdm(
             self.download_intervals, desc="Downloading missing data"
         ):
-            self.start_date = download_interval["start"]
-            self.end_date = download_interval["end"]
+            self.cur_start_date = download_interval["start"]
+            self.cur_end_date = download_interval["end"]
 
-            start_str = self.start_date.strftime("%Y-%m-%d")
-            end_str = self.end_date.strftime("%Y-%m-%d")
+            start_str = self.cur_start_date.strftime("%Y-%m-%d")
+            end_str = self.cur_end_date.strftime("%Y-%m-%d")
 
             print("-" * 20 + f" {start_str} -> {end_str} " + "-" * 20)
             try:
@@ -168,8 +168,8 @@ class AlpacaStock:
         stock_bar_request = StockBarsRequest(
             symbol_or_symbols=tickers,
             timeframe=TimeFrame(1, timeframe_unit),
-            start=self.start_date,
-            end=self.end_date,
+            start=self.cur_start_date,
+            end=self.cur_end_date,
             adjustment=Adjustment.SPLIT,
             feed=DataFeed.IEX,
         )
@@ -227,8 +227,8 @@ class AlpacaStock:
 
     @property
     def table_name(self):
-        start = self.start_date.strftime("%Y-%m-%d")
-        end = self.end_date.strftime("%Y-%m-%d")
+        start = self.cur_start_date.strftime("%Y-%m-%d")
+        end = self.cur_end_date.strftime("%Y-%m-%d")
         return f"ALPACA_STOCK_{self.interval.value}_{start}_{end}"
 
     @property
