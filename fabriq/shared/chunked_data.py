@@ -3,10 +3,11 @@ from tqdm import tqdm
 import exchange_calendars as ecals
 
 from fabriq.shared.strategies.strategy import Strategy
+from fabriq.shared.enums import Interval
 
 
 class ChunkedData:
-    def __init__(self, data: pl.DataFrame, window: int, columns: list[str]):
+    def __init__(self, data: pl.DataFrame, interval: Interval, window: int, columns: list[str]):
         min_date = data["date"].min()
         max_date = data["date"].max()
 
@@ -17,6 +18,9 @@ class ChunkedData:
             .rename({"column_0": "date"})
             .with_columns(pl.col("date").dt.date())
         )
+
+        if interval == Interval.MONTHLY:
+            schedule = schedule.with_columns(pl.col('date').dt.truncate("1mo")).unique()
 
         schedule = (
             schedule.filter(pl.col("date") >= min_date, pl.col("date") <= max_date)

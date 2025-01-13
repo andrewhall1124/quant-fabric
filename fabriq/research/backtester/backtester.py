@@ -32,8 +32,13 @@ class Backtester:
 
         # Create chunks
         chunked_data = ChunkedData(
-            data=data, window=self.strategy.window, columns=["date", "ticker", "ret"]
+            data=data, 
+            interval=self.interval,
+            window=self.strategy.window, 
+            columns=["date", "ticker", "ret"]
         )
+
+        print(chunked_data.chunks)
 
         portfolios = chunked_data.apply_strategy(self.strategy)
 
