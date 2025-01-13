@@ -38,8 +38,6 @@ class Backtester:
             columns=["date", "ticker", "ret"]
         )
 
-        print(chunked_data.chunks)
-
         portfolios = chunked_data.apply_strategy(self.strategy)
 
         portfolios = pl.concat(portfolios)
